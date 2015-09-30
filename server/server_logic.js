@@ -1,11 +1,4 @@
-
-//curl -d '{"color": "green", "mssage": "My first notification (yey)", "notify": false, "message_format": "text", "item": {"message": {"message": "/sfun panic"} }  }' -H 'Content-Type: application/json' localhost:3000/api/v1/gifs/sfun
-
-
-//curl -d '{"color": "green", "mssage": "My first notification (yey)", "notify": false, "message_format": "text", "item": {"message": {"message": "/sfun add panic http://sungevity.com"} }  }' -H 'Content-Type: application/json' localhost:3000/api/v1/gifs/sfun
-
-
-
+// Example POST Request
 // {
 //     event: 'room_message',
 //     item: {
@@ -48,8 +41,35 @@ FindGifs = {
     return gifList[seed];
 
   },
+  processParams: function(params){
+    switch(params.action){
+      case "gif": 
+        return FindGifs.findGif(params, Gifs);
+        break;
+      case "add": 
+        return FindGifs.addGif(params, Gifs);
+        break;
+      case "remove": 
+        return FindGifs.removeGif(params, Gifs);
+        break;
+      case "categories": 
+        return FindGifs.getCategories(params, Gifs);
+        break;
+      case "help": 
+        return FindGifs.getHelp(params, Gifs);
+        break;
+      default:
+        return {message: "Huh?"};
+
+    }
+  },
   parseParams: function parseParams(params){
     if((((params || {}).item || {}).message || {}).message === undefined) throw "Wrong params";
+    if(((((params || {}).item || {}).message || {}).from || {}).mention_name === undefined) throw "Wrong params";
+
+    // TODO: Add requesting user to the request:
+    // Valid users to add/remove: @JustinPerez, @MarkDRushton, @Parhelion
+    // item.message.from.mention_name
 
     var paramList = params.item.message.message.split(" ");
 
@@ -81,7 +101,7 @@ FindGifs = {
     return paramObj;
   },
   addGif: function(params, gifCollection){
-    Gifs.upsert({message: params.link},{
+    var upsertResult = gifCollection.upsert({message: params.link},{
         $set: {
           type: params.category,
           color: "red",
@@ -90,76 +110,34 @@ FindGifs = {
           message_format: "text"
         }
       });
-      return {message: "Gif Added."};
-  }
-};
+    return {message: "Gif Added.", numberAffected: upsertResult.numberAffected};
+  },
+  removeGif: function(params, gifCollection){
+    var removeResult = gifCollection.remove({message: params.link});
 
-var findGif = function findGif(params){
-  try{
-
-
-  // restrict adding by user
-
-
-  // Look at params.item.message.message
-    var message = params.item.message.message;
-
-    var action = message.split(" ")[1].toLowerCase();
-
-    if (action === "add") {
-      // add a new gif
-      var type = message.split(" ")[2].toLowerCase();
-      var link = message.split(" ")[3];
-      //console.log("Adding gif " + type + " : " + Gifs.find().fetch().length);
-      Gifs.upsert({message: link},{
-        $set: {
-          type: type,
-          color: "red",
-          message: link,
-          notify: false,
-          message_format: "text"
-        }
-      });
-      return {message: "Gif Added."};
-    };
-
-    if (action === "categories"){
-      var distinctCategories = _.uniq(Gifs.find({}, {
+    if (removeResult === 0) {
+      return {message: "Gif Not Found.", numberAffected: removeResult};
+    }
+    else {
+      return {message: "Gif Removed.", numberAffected: removeResult};
+    }
+    
+  },
+  getCategories: function(params, gifCollection){
+     var distinctCategories = _.uniq(gifCollection.find({}, {
             sort: {type: 1}, fields: {type: true}
         }).fetch().map(function(x) {
             return x.type;
         }), true);
       var msg = "Categories: " + distinctCategories;
       return {message: msg};
-    }
-
-    if (action === "help"){
-      var helpMsg = "HELP:\r\nSLASH+sfun add [category] [url] <- adds a new image for a category\r\nSLASH+sfun remove [url] <- removes an image\r\nSLASH+sfun categories <- lists categories"
-      return {message: helpMsg};
-    }
-
-    if (action === "remove"){
-      // add a new gif
-      var type = message.split(" ")[2].toLowerCase();
-      var link = message.split(" ")[3];
-      //console.log("Removing gif " + type + " : " + Gifs.find().fetch().length);
-      Gifs.remove({message: link});
-      return {message: "Gif Removed."};
-    };
-
-    if (action) {
-      // display 
-      var gifList = Gifs.find({type: action}).fetch();
-      var seed = Math.floor(Math.random() * gifList.length);
-      //console.log(gifList[seed]);
-      return gifList[seed];
-    }
+    },
+  getHelp: function(){
+    var helpMsg = "HELP:\r\nSLASH+sfun add [category] [url] <- adds a new image for a category\r\nSLASH+sfun remove [url] <- removes an image\r\nSLASH+sfun categories <- lists categories"
+    return {message: helpMsg};
   }
-  catch(err){
-    return "Oh noes... what did you do?!?!";
-  }
-
 };
+
 
   Meteor.startup(function () {
     // Global configuration
@@ -169,49 +147,25 @@ var findGif = function findGif(params){
       prettyJson: true
     });
  
-    // Generates: GET/POST on /api/v1/users, and GET/PUT/DELETE on /api/v1/users/:id 
-    // for Meteor.users collection (works on any Mongo collection)
-    Api.addCollection(Gifs);
-    // That's it! Many more options are available if needed...
- 
-    // // Maps to: POST /api/v1/articles/:id
-    // Api.addRoute('gifs/random', {authRequired: false}, {
-    //   get: {
-    //     action: function () {
-    //       var gif = Gifs.findOne({});
-    //       if (gif) {
-    //         return gif;
-    //       }
-    //       return {
-    //         statusCode: 400,
-    //         body: {status: "fail", message: "Unable to add article"}
-    //       };
-    //     }
-    //   }
-    // });
 
-        // Maps to: POST /api/v1/articles/:id
+    // Maps to: POST /api/v1/articles/:id
     Api.addRoute('gifs/sfun', {authRequired: false}, {
       post: {
         action: function () {
 
-          var gif = findGif(this.bodyParams);
-          //var gif = Gifs.findOne({});
-          if (gif) {
-            // var result = Meteor.http.post(
-            //     "https://api.hipchat.com/v2/room/1981253/notification?auth_token=QNL9fyiQGo0PVbztHqfWG7nP4p3Vf58rQINiRcaK",
-            //     { data: { color: "red", message: "http://rack.0.mshcdn.com/media/ZgkyMDEzLzA2LzE4LzM5L3Bhbmlja2luZ2NhLmQxYjIwLmdpZgpwCXRodW1iCTEyMDB4OTYwMD4/bda233e5/806/panicking-cat.gif", notify: "false", message_format: "text"} } );
+          var params = FindGifs.parseParams(this.bodyParams);
+          var result = FindGifs.processParams(params);
 
+          if (result) {
               return {
-                //message: this.bodyParams.item.message};
                 notify: "false", 
                 message_format: "text",
-                message: gif.message
+                message: result.message
               };
           }
           return {
             statusCode: 400,
-            body: {status: "fail", message: "Unable to add article"}
+            body: {status: "fail", message: "Oh noes! It all went wrong."}
           };
         }
       }
