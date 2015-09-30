@@ -30,9 +30,23 @@
 // }
 
 FindGifs = {
-  validActions: ["add", "remove", "help", "categries", "gif"],
-  findGif: function findGif(params){
-    return {test:"me"};
+  validActions: ["add", "remove", "help", "categories", "gif"],
+  findGif: function findGif(params, gifCollection){
+
+    var search = {};
+
+    if (params.category !== 'random') search = {type: params.category};
+
+    var gifList = gifCollection.find(search).fetch();
+
+    if (gifList.length === 0){
+      return {message: "I got nuthin'"};
+    } 
+
+    var seed = Math.floor(Math.random() * gifList.length);
+
+    return gifList[seed];
+
   },
   parseParams: function parseParams(params){
     if((((params || {}).item || {}).message || {}).message === undefined) throw "Wrong params";
@@ -45,19 +59,38 @@ FindGifs = {
 
     // Find action
     if (FindGifs.validActions.indexOf(paramList[1]) >= 0) {
-    
+
       paramObj.action = paramList[1].toLowerCase();
-      
-      if (paramList[2]) paramObj.category = paramList[2].toLowerCase();
+
+      switch(paramObj.action){
+        case "add": 
+          if (paramList[2]) paramObj.category = paramList[2].toLowerCase();
+          if (paramList[3]) paramObj.link = paramList[3];
+          break;
+        case "remove": 
+          if (paramList[2]) paramObj.link = paramList[2];
+          break;
+      }
+
     }
     else {
       paramObj.action = "gif";
-      paramObj.category = paramList[1].toLowerCase();
+      if (paramList[1]) paramObj.category = paramList[1].toLowerCase();
     }
 
-    paramObj.link = paramList[3];
-
     return paramObj;
+  },
+  addGif: function(params, gifCollection){
+    Gifs.upsert({message: params.link},{
+        $set: {
+          type: params.category,
+          color: "red",
+          message: params.link,
+          notify: false,
+          message_format: "text"
+        }
+      });
+      return {message: "Gif Added."};
   }
 };
 
