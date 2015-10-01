@@ -22,8 +22,13 @@
 //     webhook_id: 578829
 // }
 
+
+// curl -d '{"color": "green", "mssage": "My first notification (yey)", "notify": false, "message_format": "text", "item": {"message": {"from": {"mention_name": "@MarkDRushton"}, "message": "/sfun add testcat http://google"} }  }' -H 'Content-Type: application/json' localhost:3000/api/v1/gifs/sfun
+
 FindGifs = {
   validActions: ["add", "remove", "help", "categories", "gif"],
+  approvedAdmins: ["@JustinPerez", "@MarkDRushton", "@Parhelion"],
+  invalidCredentialsGif: "http://i.imgur.com/egUwx5Q.gif",
   findGif: function findGif(params, gifCollection){
 
     var search = {};
@@ -47,10 +52,24 @@ FindGifs = {
         return FindGifs.findGif(params, Gifs);
         break;
       case "add": 
-        return FindGifs.addGif(params, Gifs);
+        if (FindGifs.approvedAdmins.indexOf(params.mention_name) >= 0)
+        {
+          return FindGifs.addGif(params, Gifs);
+        }
+        else
+        {
+          return {message: FindGifs.invalidCredentialsGif};
+        }
         break;
       case "remove": 
-        return FindGifs.removeGif(params, Gifs);
+        if (FindGifs.approvedAdmins.indexOf(params.mention_name) >= 0)
+        {
+          return FindGifs.removeGif(params, Gifs);
+        }
+        else
+        {
+          return {message: FindGifs.invalidCredentialsGif};
+        }
         break;
       case "categories": 
         return FindGifs.getCategories(params, Gifs);
@@ -67,14 +86,11 @@ FindGifs = {
     if((((params || {}).item || {}).message || {}).message === undefined) throw "Wrong params";
     if(((((params || {}).item || {}).message || {}).from || {}).mention_name === undefined) throw "Wrong params";
 
-    // TODO: Add requesting user to the request:
-    // Valid users to add/remove: @JustinPerez, @MarkDRushton, @Parhelion
-    // item.message.from.mention_name
-
     var paramList = params.item.message.message.split(" ");
 
     var paramObj = {
-      slashCommand: paramList[0]
+      slashCommand: paramList[0],
+      mention_name: params.item.message.from.mention_name
     };
 
     // Find action
