@@ -1,29 +1,33 @@
 describe("FindGifs spec", function() {
-	var gifs_spec = new Mongo.Collection('gifs_spec');	
+	var gifs_spec = new Mongo.Collection('gifs_spec');
 
 	describe("removeGif() spec", function() {
 
 		beforeAll(function() {
 			var message = '!@#qweASD';
-			gifs_spec.upsert({message: message},{
-	        $set: {
-	          type: "test_category",
-	          color: "red",
-	          message: message,
-	          notify: false,
-	          message_format: "text"
-	        }
-	      });
+			gifs_spec.upsert({
+				message: message
+			}, {
+				$set: {
+					type: "test_category",
+					color: "red",
+					message: message,
+					notify: false,
+					message_format: "text"
+				}
+			});
 		});
 
 		afterAll(function() {
 			gifs_spec.remove({});
-		});	
+		});
 
 		it("Removes a gif from all collections", function() {
 			var beginLength = gifs_spec.find().fetch().length;
 
-			var params = {link: "!@#qweASD"};
+			var params = {
+				link: "!@#qweASD"
+			};
 
 			var result = FindGifs.removeGif(params, gifs_spec);
 
@@ -33,11 +37,13 @@ describe("FindGifs spec", function() {
 			expect(result.numberAffected).toEqual(1);
 			expect(endLength).toEqual(beginLength - 1);
 
-		});	
+		});
 		it("Does't remove an invalid gif from all collections", function() {
 			var beginLength = gifs_spec.find().fetch().length;
 
-			var params = {link: "123qweasd"};
+			var params = {
+				link: "123qweasd"
+			};
 
 			var result = FindGifs.removeGif(params, gifs_spec);
 
@@ -47,32 +53,37 @@ describe("FindGifs spec", function() {
 			expect(result.numberAffected).toEqual(0);
 			expect(endLength).toEqual(beginLength);
 
-		});	
+		});
 	});
 
 	describe("addGif() spec", function() {
 
 		beforeAll(function() {
 			var message = '!@#qweASD';
-			gifs_spec.upsert({message: message},{
-	        $set: {
-	          type: "test_category",
-	          color: "red",
-	          message: message,
-	          notify: false,
-	          message_format: "text"
-	        }
-	      });
+			gifs_spec.upsert({
+				message: message
+			}, {
+				$set: {
+					type: "test_category",
+					color: "red",
+					message: message,
+					notify: false,
+					message_format: "text"
+				}
+			});
 		});
 
 		afterAll(function() {
 			gifs_spec.remove({});
-		});	
+		});
 
 		it("Adds a gif to the collection", function() {
 			var beginLength = gifs_spec.find().fetch().length;
 
-			var params = {category:"new_category", link: "123qweasd"};
+			var params = {
+				category: "new_category",
+				link: "123qweasd"
+			};
 
 			var result = FindGifs.addGif(params, gifs_spec);
 
@@ -82,11 +93,14 @@ describe("FindGifs spec", function() {
 			expect(result.numberAffected).toEqual(1);
 			expect(endLength).toEqual(beginLength + 1);
 
-		});	
+		});
 		it("Doesn't a gif to the collection if it's a duplicate", function() {
 			var beginLength = gifs_spec.find().fetch().length;
 
-			var params = {category:"new_category", link: "!@#qweASD"};
+			var params = {
+				category: "new_category",
+				link: "!@#qweASD"
+			};
 
 			var result = FindGifs.addGif(params, gifs_spec);
 
@@ -96,7 +110,7 @@ describe("FindGifs spec", function() {
 			expect(result.numberAffected).toEqual(1);
 			expect(endLength).toEqual(beginLength);
 
-		});	
+		});
 	});
 
 	describe("findGif() spec", function() {
@@ -105,15 +119,17 @@ describe("FindGifs spec", function() {
 		beforeAll(function() {
 			//gifs_spec = new Mongo.Collection('gifs_spec');
 			var message = '!@#qweASD';
-			gifs_spec.upsert({message: message},{
-	        $set: {
-	          type: "test_category",
-	          color: "red",
-	          message: message,
-	          notify: false,
-	          message_format: "text"
-	        }
-	      });
+			gifs_spec.upsert({
+				message: message
+			}, {
+				$set: {
+					type: "test_category",
+					color: "red",
+					message: message,
+					notify: false,
+					message_format: "text"
+				}
+			});
 		});
 
 		afterAll(function() {
@@ -160,7 +176,7 @@ describe("FindGifs spec", function() {
 			// expecting params.item.message.message
 			var params = {};
 
-			var func = function (){
+			var func = function() {
 				FindGifs.parseParams(params);
 			};
 
@@ -177,7 +193,7 @@ describe("FindGifs spec", function() {
 			params.item.message.from = {};
 			params.item.message.from.mention_name = "";
 
-			var func = function (){
+			var func = function() {
 				FindGifs.parseParams(params);
 			};
 
@@ -192,7 +208,7 @@ describe("FindGifs spec", function() {
 			params.item.message.message = "/sfun category";
 
 			var val = FindGifs.parseParams(params);
-			
+
 
 			expect(typeof(val)).toEqual("object");
 		});
@@ -281,4 +297,3 @@ describe("FindGifs spec", function() {
 		});
 	});
 });
-
