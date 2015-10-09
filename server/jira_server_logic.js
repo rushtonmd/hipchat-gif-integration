@@ -52,6 +52,10 @@ JiraServerLogic = {
 
 	getAllSprintReports: function() {
 
+		var sessionResult = JiraServerLogic.createSession();
+
+		if (sessionResult.statusCode !== 200) return;
+
 		var results = {};
 		results.teams = [];
 		results.totals = {};
@@ -70,7 +74,7 @@ JiraServerLogic = {
 
 			team.id = teamID.id;
 
-			team.latestSprint = JiraServerLogic.getSprintReport(teamID.id);
+			team.latestSprint = JiraServerLogic.getSprintReport(teamID.id, sessionResult);
 
 			results.totals.storiesDone += team.latestSprint.issuesDone.stories;
 			results.totals.storiesNotDone += team.latestSprint.issuesNotDone.stories;
@@ -86,11 +90,9 @@ JiraServerLogic = {
 
 	},
 
-	getSprintReport: function(teamID) {
+	getSprintReport: function(teamID, sessionResult) {
 
-		var sessionResult = JiraServerLogic.createSession();
-
-		if (sessionResult.statusCode === 200) {
+		//if (sessionResult.statusCode === 200) {
 
 			var latestSprintUrl = "https://sungevity.atlassian.net/rest/greenhopper/latest/sprintquery/" + teamID;
 
@@ -137,6 +139,8 @@ JiraServerLogic = {
 				# of stories/points left in sprint
 				# of brick-ins
 				# of brick-outs
+				# of committed stories done
+				# of brick-ins done
 			*/
 
 			var sprintReportSummary = {};
@@ -187,14 +191,31 @@ JiraServerLogic = {
 				sprintReportSummary.brickins.storypoints;
 
 
+			// CompletedIssues not in Brickins list
+			var originalCommittedDone = _.filter(sprintReportResults.completedIssues, function(issue) {
+				return _.indexOf(brickinList, issue.key) === -1;
+			});
+
+			var originalCommittedDoneSum = _.reduce(originalCommittedDone, function(memo, issue) {
+				return memo + (issue.estimateStatistic.statFieldValue.value || 0);
+			}, 0);
+
+			sprintReportSummary.originalCommittedDone = {};
+			sprintReportSummary.originalCommittedDone.stories = originalCommittedDone.length;
+			sprintReportSummary.originalCommittedDone.storypoints = originalCommittedDoneSum;
+
+			sprintReportSummary.brickinsDone = {};
+			sprintReportSummary.brickinsDone.stories = sprintReportSummary.issuesDone.stories - sprintReportSummary.originalCommittedDone.stories;
+			sprintReportSummary.brickinsDone.storypoints = sprintReportSummary.issuesDone.storypoints - sprintReportSummary.originalCommittedDone.storypoints;
+
 			return sprintReportSummary;
 
 
-		}
+		//}
 	}
 
 }
 
-var reports = JiraServerLogic.getAllSprintReports();
+// var reports = JiraServerLogic.getAllSprintReports();
 
-console.log(reports);
+// console.log(reports);

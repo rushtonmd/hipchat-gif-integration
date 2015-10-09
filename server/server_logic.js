@@ -79,7 +79,7 @@ FindGifs = {
 				break;
 			case "remove":
 				if (FindGifs.validateUser(params.mention_name)) {
-						return FindGifs.removeGif(params, Gifs);
+					return FindGifs.removeGif(params, Gifs);
 				} else {
 					return {
 						message: FindGifs.invalidCredentialsGif
@@ -214,7 +214,7 @@ Meteor.startup(function() {
 			action: function() {
 
 				var params = FindGifs.parseParams(this.bodyParams);
-				
+
 				var result = FindGifs.processParams(params);
 
 				if (result) {
@@ -223,6 +223,29 @@ Meteor.startup(function() {
 						message_format: "text",
 						message: result.message
 					};
+				}
+				return {
+					statusCode: 400,
+					body: {
+						status: "fail",
+						message: "Oh noes! It all went wrong."
+					}
+				};
+			}
+		}
+	});
+
+	// Maps to: POST jira/sprintreport/latest
+	Api.addRoute('jira/sprintreport/latest', {
+		authRequired: false
+	}, {
+		get: {
+			action: function() {
+
+				var result = JiraServerLogic.getAllSprintReports();
+
+				if (result) {
+					return result;
 				}
 				return {
 					statusCode: 400,
