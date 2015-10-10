@@ -64,6 +64,8 @@ JiraServerLogic = {
 		results.totals.storiesBrickouts = 0;
 		results.totals.storiesBrickins = 0;
 		results.totals.storiesCommitment = 0;
+		results.totals.storiesCommitmentDone = 0;
+		results.totals.storiesBrickinsDone = 0;
 
 
 		_.each(JiraServerLogic.teamBoardIDs, function(teamID) {
@@ -81,6 +83,8 @@ JiraServerLogic = {
 			results.totals.storiesBrickouts += team.latestSprint.brickouts.stories;
 			results.totals.storiesBrickins += team.latestSprint.brickins.stories;
 			results.totals.storiesCommitment += team.latestSprint.commitment.stories;
+			results.totals.storiesCommitmentDone += team.latestSprint.originalCommittedDone.stories;
+			results.totals.storiesBrickinsDone += team.latestSprint.brickinsDone.stories;
 
 			results.teams.push(team);
 

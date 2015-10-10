@@ -33,7 +33,7 @@
 FindGifs = {
 	validActions: ["add", "remove", "help", "categories", "gif"],
 
-	approvedAdmins: ["@JustinPerez", "@MarkDRushton", "@Parhelion"],
+	approvedAdmins: ["JustinPerez", "MarkDRushton", "Parhelion"],
 
 	invalidCredentialsGif: "http://i.imgur.com/egUwx5Q.gif",
 
@@ -73,7 +73,7 @@ FindGifs = {
 					return FindGifs.addGif(params, Gifs);
 				} else {
 					return {
-						message: FindGifs.invalidCredentialsGif
+						message: "Sorry, " + params.mention_name + ". " + FindGifs.invalidCredentialsGif
 					};
 				}
 				break;
@@ -82,7 +82,7 @@ FindGifs = {
 					return FindGifs.removeGif(params, Gifs);
 				} else {
 					return {
-						message: FindGifs.invalidCredentialsGif
+						message: "Sorry, " + params.mention_name + ". " + FindGifs.invalidCredentialsGif
 					};
 				}
 				break;
