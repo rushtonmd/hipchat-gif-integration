@@ -98,44 +98,46 @@ JiraServerLogic = {
 
 		//if (sessionResult.statusCode === 200) {
 
-			var latestSprintUrl = "https://sungevity.atlassian.net/rest/greenhopper/latest/sprintquery/" + teamID;
+		var latestSprintUrl = "https://sungevity.atlassian.net/rest/greenhopper/latest/sprintquery/" + teamID;
 
-			var latestSprintUrlResult = Meteor.http.call("GET", latestSprintUrl, {
-				params: {
-					timeout: 30000
-				},
-				headers: {
-					"cookie": sessionResult.cookie_value,
-					"content-type": "application/json",
-					"Accept": "application/json"
-				},
-			});
+		var latestSprintUrlResult = Meteor.http.call("GET", latestSprintUrl, {
+			params: {
+				timeout: 30000
+			},
+			headers: {
+				"cookie": sessionResult.cookie_value,
+				"content-type": "application/json",
+				"Accept": "application/json"
+			},
+		});
 
-			var latestSprints = JSON.parse(latestSprintUrlResult.content).sprints.reverse();
+		var latestSprints = JSON.parse(latestSprintUrlResult.content).sprints.reverse();
 
-			var latestSprint = _.find(latestSprints, function(sprint) {
-				return sprint.state === 'CLOSED';
-			}).id;
-
-
-			var auth_url = "https://sungevity.atlassian.net/rest/greenhopper/1.0/rapid/charts/sprintreport?rapidViewId=" + teamID + "&sprintId=" + latestSprint;
-			var result = Meteor.http.call("GET", auth_url, {
-				params: {
-					timeout: 30000
-				},
-				headers: {
-					"cookie": sessionResult.cookie_value,
-					"content-type": "application/json",
-					"Accept": "application/json"
-				},
-			});
-
-			var sprintReportRes = JSON.parse(result.content);
-			var sprintReportResults = sprintReportRes.contents;
-			var sprintReportDetails = sprintReportRes.sprint;
+		var latestSprint = _.find(latestSprints, function(sprint) {
+			return sprint.state === 'CLOSED';
+		}).id;
 
 
-			/*
+		var auth_url = "https://sungevity.atlassian.net/rest/greenhopper/1.0/rapid/charts/sprintreport?rapidViewId=" + teamID + "&sprintId=" + latestSprint;
+		var result = Meteor.http.call("GET", auth_url, {
+			params: {
+				timeout: 30000
+			},
+			headers: {
+				"cookie": sessionResult.cookie_value,
+				"content-type": "application/json",
+				"Accept": "application/json"
+			},
+		});
+
+		var sprintReportRes = JSON.parse(result.content);
+		var sprintReportResults = sprintReportRes.contents;
+		var sprintReportDetails = sprintReportRes.sprint;
+
+		console.log(sprintReportResults.issuesNotCompletedInCurrentSprint);
+
+
+		/*
 				Return Values
 
 				Sprint Commitment
@@ -147,72 +149,74 @@ JiraServerLogic = {
 				# of brick-ins done
 			*/
 
-			var sprintReportSummary = {};
-			sprintReportSummary.sprintDetails = {
-				name: sprintReportDetails.name,
-				startDate: sprintReportDetails.startDate,
-				endDate: sprintReportDetails.endDate
-			};
+		var sprintReportSummary = {};
+		sprintReportSummary.sprintDetails = {
+			name: sprintReportDetails.name,
+			startDate: sprintReportDetails.startDate,
+			endDate: sprintReportDetails.endDate
+		};
 
-			sprintReportSummary.issuesDone = {};
-			sprintReportSummary.issuesDone.stories = sprintReportResults.completedIssues.length;
-			sprintReportSummary.issuesDone.storypoints = sprintReportResults.completedIssuesEstimateSum.value;
-
-			sprintReportSummary.issuesNotDone = {};
-			sprintReportSummary.issuesNotDone.stories = sprintReportResults.incompletedIssues.length;
-			sprintReportSummary.issuesNotDone.storypoints = sprintReportResults.incompletedIssuesEstimateSum.value;
-
-			sprintReportSummary.brickouts = {};
-			sprintReportSummary.brickouts.stories = sprintReportResults.puntedIssues.length;
-			sprintReportSummary.brickouts.storypoints = sprintReportResults.puntedIssuesEstimateSum.value;
+		sprintReportSummary.issuesDone = {};
+		sprintReportSummary.issuesDone.stories = sprintReportResults.completedIssues.length;
+		sprintReportSummary.issuesDone.storypoints = sprintReportResults.completedIssuesEstimateSum.value;
 
 
-			// Need to sum up the points of the issues in issueKeysAddedDuringSprint
-			var allIssues = _.union(sprintReportResults.completedIssues, sprintReportResults.incompletedIssues, sprintReportResults.puntedIssues);
-			var brickinList = _.keys(sprintReportResults.issueKeysAddedDuringSprint);
-
-			var brickins = _.filter(allIssues, function(issue) {
-				return _.indexOf(brickinList, issue.key) >= 0;
-			});
-			var brickinsSum = _.reduce(brickins, function(memo, issue) {
-				return memo + (issue.estimateStatistic.statFieldValue.value || 0);
-			}, 0);
-
-			sprintReportSummary.brickins = {};
-			sprintReportSummary.brickins.stories = brickins.length;
-			sprintReportSummary.brickins.storypoints = brickinsSum;
-
-			sprintReportSummary.commitment = {};
-			sprintReportSummary.commitment.stories =
-				sprintReportSummary.issuesDone.stories +
-				sprintReportSummary.issuesNotDone.stories +
-				sprintReportSummary.brickouts.stories -
-				sprintReportSummary.brickins.stories;
-			sprintReportSummary.commitment.storypoints =
-				sprintReportSummary.issuesDone.storypoints +
-				sprintReportSummary.issuesNotDone.storypoints +
-				sprintReportSummary.brickouts.storypoints -
-				sprintReportSummary.brickins.storypoints;
+		sprintReportSummary.issuesNotDone = {};
+		sprintReportSummary.issuesNotDone.stories = sprintReportResults.issuesNotCompletedInCurrentSprint.length;
+		sprintReportSummary.issuesNotDone.storypoints = sprintReportResults.issuesNotCompletedEstimateSum.value;
 
 
-			// CompletedIssues not in Brickins list
-			var originalCommittedDone = _.filter(sprintReportResults.completedIssues, function(issue) {
-				return _.indexOf(brickinList, issue.key) === -1;
-			});
+		sprintReportSummary.brickouts = {};
+		sprintReportSummary.brickouts.stories = sprintReportResults.puntedIssues.length;
+		sprintReportSummary.brickouts.storypoints = sprintReportResults.puntedIssuesEstimateSum.value;
 
-			var originalCommittedDoneSum = _.reduce(originalCommittedDone, function(memo, issue) {
-				return memo + (issue.estimateStatistic.statFieldValue.value || 0);
-			}, 0);
 
-			sprintReportSummary.originalCommittedDone = {};
-			sprintReportSummary.originalCommittedDone.stories = originalCommittedDone.length;
-			sprintReportSummary.originalCommittedDone.storypoints = originalCommittedDoneSum;
+		// Need to sum up the points of the issues in issueKeysAddedDuringSprint
+		var allIssues = _.union(sprintReportResults.completedIssues, sprintReportResults.issuesNotCompletedInCurrentSprint, sprintReportResults.puntedIssues);
+		var brickinList = _.keys(sprintReportResults.issueKeysAddedDuringSprint);
 
-			sprintReportSummary.brickinsDone = {};
-			sprintReportSummary.brickinsDone.stories = sprintReportSummary.issuesDone.stories - sprintReportSummary.originalCommittedDone.stories;
-			sprintReportSummary.brickinsDone.storypoints = sprintReportSummary.issuesDone.storypoints - sprintReportSummary.originalCommittedDone.storypoints;
+		var brickins = _.filter(allIssues, function(issue) {
+			return _.indexOf(brickinList, issue.key) >= 0;
+		});
+		var brickinsSum = _.reduce(brickins, function(memo, issue) {
+			return memo + (issue.estimateStatistic.statFieldValue.value || 0);
+		}, 0);
 
-			return sprintReportSummary;
+		sprintReportSummary.brickins = {};
+		sprintReportSummary.brickins.stories = brickins.length;
+		sprintReportSummary.brickins.storypoints = brickinsSum;
+
+		sprintReportSummary.commitment = {};
+		sprintReportSummary.commitment.stories =
+			sprintReportSummary.issuesDone.stories +
+			sprintReportSummary.issuesNotDone.stories +
+			sprintReportSummary.brickouts.stories -
+			sprintReportSummary.brickins.stories;
+		sprintReportSummary.commitment.storypoints =
+			sprintReportSummary.issuesDone.storypoints +
+			sprintReportSummary.issuesNotDone.storypoints +
+			sprintReportSummary.brickouts.storypoints -
+			sprintReportSummary.brickins.storypoints;
+
+
+		// CompletedIssues not in Brickins list
+		var originalCommittedDone = _.filter(sprintReportResults.completedIssues, function(issue) {
+			return _.indexOf(brickinList, issue.key) === -1;
+		});
+
+		var originalCommittedDoneSum = _.reduce(originalCommittedDone, function(memo, issue) {
+			return memo + (issue.estimateStatistic.statFieldValue.value || 0);
+		}, 0);
+
+		sprintReportSummary.originalCommittedDone = {};
+		sprintReportSummary.originalCommittedDone.stories = originalCommittedDone.length;
+		sprintReportSummary.originalCommittedDone.storypoints = originalCommittedDoneSum;
+
+		sprintReportSummary.brickinsDone = {};
+		sprintReportSummary.brickinsDone.stories = sprintReportSummary.issuesDone.stories - sprintReportSummary.originalCommittedDone.stories;
+		sprintReportSummary.brickinsDone.storypoints = sprintReportSummary.issuesDone.storypoints - sprintReportSummary.originalCommittedDone.storypoints;
+
+		return sprintReportSummary;
 
 
 		//}
