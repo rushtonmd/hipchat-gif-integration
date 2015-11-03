@@ -158,17 +158,17 @@ JiraServerLogic = {
 
 		sprintReportSummary.issuesDone = {};
 		sprintReportSummary.issuesDone.stories = sprintReportResults.completedIssues.length;
-		sprintReportSummary.issuesDone.storypoints = sprintReportResults.completedIssuesEstimateSum.value;
+		sprintReportSummary.issuesDone.storypoints = sprintReportResults.completedIssuesInitialEstimateSum.value || 0;
 
 
 		sprintReportSummary.issuesNotDone = {};
 		sprintReportSummary.issuesNotDone.stories = sprintReportResults.issuesNotCompletedInCurrentSprint.length;
-		sprintReportSummary.issuesNotDone.storypoints = sprintReportResults.issuesNotCompletedEstimateSum.value;
+		sprintReportSummary.issuesNotDone.storypoints = sprintReportResults.issuesNotCompletedEstimateSum.value || 0;
 
 
 		sprintReportSummary.brickouts = {};
 		sprintReportSummary.brickouts.stories = sprintReportResults.puntedIssues.length;
-		sprintReportSummary.brickouts.storypoints = sprintReportResults.puntedIssuesEstimateSum.value;
+		sprintReportSummary.brickouts.storypoints = sprintReportResults.puntedIssuesEstimateSum.value || 0;
 
 
 		// Need to sum up the points of the issues in issueKeysAddedDuringSprint
