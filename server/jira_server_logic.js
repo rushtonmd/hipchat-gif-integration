@@ -18,7 +18,10 @@ JiraServerLogic = {
 	}, {
 		name: 'Vulcan',
 		id: 27
-	}, ],
+	}, {
+		name: 'Devron',
+		id: 39
+	}],
 
 	createSession: function() {
 		var auth_url = "https://sungevity.atlassian.net/rest/auth/latest/session";
