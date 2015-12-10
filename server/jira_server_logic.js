@@ -182,7 +182,11 @@ JiraServerLogic = {
 			return _.indexOf(brickinList, issue.key) >= 0;
 		});
 		var brickinsSum = _.reduce(brickins, function(memo, issue) {
-			return memo + (issue.estimateStatistic.statFieldValue.value || 0);
+			if (issue && issue.estimateStatistic && issue.estimateStatistic.statFieldValue && issue.estimateStatistic.statFieldValue){
+				return memo + (issue.estimateStatistic.statFieldValue.value || 0);
+			}
+			return memo;
+
 		}, 0);
 
 		sprintReportSummary.brickins = {};
@@ -208,7 +212,11 @@ JiraServerLogic = {
 		});
 
 		var originalCommittedDoneSum = _.reduce(originalCommittedDone, function(memo, issue) {
-			return memo + (issue.estimateStatistic.statFieldValue.value || 0);
+			if (issue && issue.estimateStatistic && issue.estimateStatistic.statFieldValue && issue.estimateStatistic.statFieldValue){
+				return memo + (issue.estimateStatistic.statFieldValue.value || 0);				
+			}
+			return 0;
+
 		}, 0);
 
 		sprintReportSummary.originalCommittedDone = {};

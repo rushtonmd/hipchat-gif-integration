@@ -22,3 +22,8 @@ nimble:restivus
 http
 sanjo:jasmine
 velocity:html-reporter
+random
+chart:chart
+clinical:router
+maazalik:highcharts
+momentjs:moment

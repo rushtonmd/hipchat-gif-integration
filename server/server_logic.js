@@ -67,11 +67,11 @@ FindGifs = {
 		switch (params.action) {
 			case "gif":
 				// if JenChan tries to find a gif, make sure to return a safe cat gif 
-				if (params.mention_name === "JenChan") {
-					return {
-						message: 'How about a nice cat gif, Jen? http://sadmoment.com/wp-content/uploads/2014/01/Lazy-Cat-Sighs-At-The-Boring-State-Its-Life-Has-Come-To.gif'
-					};
-				};
+				// if (params.mention_name === "JenChan") {
+				// 	return {
+				// 		message: 'How about a nice cat gif, Jen? http://sadmoment.com/wp-content/uploads/2014/01/Lazy-Cat-Sighs-At-The-Boring-State-Its-Life-Has-Come-To.gif'
+				// 	};
+				// };
 				return FindGifs.findGif(params, Gifs);
 				break;
 			case "add":

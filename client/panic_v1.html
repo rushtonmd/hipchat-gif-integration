@@ -1,0 +1,60 @@
+<head>
+  <title>panic_v1</title>
+</head>
+
+<body>
+  <h1>Project Estimatometer!</h1>
+
+  <!-- {{> hello}} -->
+</body>
+
+<template name="hello">
+  <button>Click Me</button>
+  <p>You've pressed the button {{counter}} times.</p>
+</template>
+
+<template name="issues">
+  <button>Issues!</button>
+  <p>Blah blah.</p>
+</template>
+
+
+<template name="teams">  
+  <form>
+    <input type="text" name="query">
+    <input type="submit" value="Search">
+  </form>
+
+  {{#if searching}}
+    <p>Searching...</p>
+  {{else}}
+    {{#if teams.count}}
+      <hr>
+      <table>
+        {{#each teams}}
+          {{> team}}
+        {{/each}}
+      </table>
+    {{/if}}
+  {{/if}}
+
+  {{> highcharts}}
+
+</template>
+
+<template name="team">  
+  <tr>
+    <td class="image"><img src="{{thumb}}"></td>
+    <td>
+      <a href="{{link}}" target="_blank">{{title}}</a>
+      <p>{{{snippet}}}</p>
+    </td>
+  </tr>
+</template> 
+
+
+<template name="highcharts">
+	<div>
+		<div id="container-column" style="min-width: 310px; height: 400px;"></div>
+	</div>
+</template> 
