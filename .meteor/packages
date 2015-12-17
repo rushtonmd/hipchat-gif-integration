@@ -27,3 +27,4 @@ chart:chart
 clinical:router
 maazalik:highcharts
 momentjs:moment
+twbs:bootstrap

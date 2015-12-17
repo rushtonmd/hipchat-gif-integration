@@ -41,7 +41,7 @@ Meteor.publish('labelSearch', function(query) {
 
 		if (sessionResult.statusCode !== 200) return;
 
-		var labelSearchUrl = 'https://sungevity.atlassian.net/rest/api/2/search?jql=labels%20in%20(' + query.trim() +')&maxResults=200&fields=summary,created,issuetype,status,customfield_10005';
+		var labelSearchUrl = 'https://sungevity.atlassian.net/rest/api/2/search?jql=labels%20in%20(' + query.trim() +')&maxResults=200&fields=summary,created,issuetype,status,customfield_10005&expand=changelog';
 
 
 		var response = Meteor.http.call("GET", labelSearchUrl, {
@@ -84,14 +84,35 @@ Meteor.publish('labelSearch', function(query) {
 		});
 
 		_.each(allIssues, function(item, key) {
+
+			var doneDate = null;
+
+			if (item.fields.status.statusCategory.name === "Done") {
+
+				// Let's try a reduce of the history
+				doneDate = _.reduce(item.changelog.histories, function(memo, i){
+					var d = new Date(i.created);
+					if(_.reduce(i.items, function(memo, j){
+						if (j.field === "status" && j.toString === "Done") return memo || true;
+						return memo || false;
+					}, false)) {
+						if (d > memo) return d;
+					};
+
+					return memo;
+
+				}, null);
+			};
+
 			var doc = {
 				key: item.key,
 				storyPoints: item.fields.customfield_10005,
 				created: item.fields.created,
 				status: item.fields.status.statusCategory.name,
-				type: item.fields.issuetype
+				type: item.fields.issuetype,
+				doneDate: doneDate
 			};
-
+			
 			self.added('issues', Random.id(), doc);
 
 		});

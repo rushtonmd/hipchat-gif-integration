@@ -1,11 +1,12 @@
 <head>
-  <title>panic_v1</title>
+  <title>Project Estimatometer</title>
 </head>
 
 <body>
-  <h1>Project Estimatometer!</h1>
 
-  <!-- {{> hello}} -->
+  <!-- Meteor Templates -->
+
+
 </body>
 
 <template name="hello">
@@ -20,25 +21,50 @@
 
 
 <template name="teams">  
-  <form>
-    <input type="text" name="query">
-    <input type="submit" value="Search">
-  </form>
+  <div class="container">
+    <div class="row text-center col-md-12" style="margin-top: 30px; margin-bottom: 30px">
+      <form class="form-inline label-search-form">
+        <div class="form-group">
+          <input type="text" class="form-control" id="labelSearchInput" placeholder="awe, CALoans, etc.">
+        </div>
+        <button type="submit" class="btn btn-success">Search Labels!</button>
+      </form>
+    </div>
 
-  {{#if searching}}
-    <p>Searching...</p>
-  {{else}}
-    {{#if teams.count}}
-      <hr>
-      <table>
-        {{#each teams}}
-          {{> team}}
-        {{/each}}
-      </table>
-    {{/if}}
-  {{/if}}
+    <div class="row text-center col-md-12">
+      {{#if searching}}
+        <p>Searching...</p>
+      {{else}}
+          {{> highcharts}}
+      {{/if}}
+    </div>
+  </div>
 
-  {{> highcharts}}
+  <div class="row text-center col-md-12" style="margin-top: 30px; margin-bottom: 30px">
+    <form class="form-inline chart-params-form">
+      <div class="row text-center">
+      <div class="row col-xs-3 col-xs-offset-3">
+      <div class="form-group">
+        <label for="chartConfidenceLow">Velocity (LOW)</label>
+        <input type="text" class="form-control" id="chartConfidenceLow" placeholder="Confidence Value (LOW)" value="{{confidenceLow}}">
+      </div>
+    </div>
+    <div class="row col-xs-3">
+      <div class="form-group">
+        <label for="chartConfidenceHigh">Velocity (HIGH)</label>
+        <input type="text" class="form-control" id="chartConfidenceHigh" placeholder="Confidence Value (HIGH)" value="{{confidenceHigh}}">
+      </div>
+    </div>
+  </div>
+    <div class="row" style="margin-top: 10px">
+    <div class="row col-xs-12">
+      <button type="submit" class="btn btn-primary">Refresh Chart!</button>
+    </div>
+  </div>
+    </form>
+  </div>
+
+
 
 </template>
 
@@ -54,7 +80,5 @@
 
 
 <template name="highcharts">
-	<div>
 		<div id="container-column" style="min-width: 310px; height: 400px;"></div>
-	</div>
 </template> 
