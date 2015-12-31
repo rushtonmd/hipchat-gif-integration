@@ -46,11 +46,11 @@ function buildTeamDoneChart() {
     });
 
     var issuesDone = _.map(sprints, function(s) {
-        return s.issuesDone.storypoints;
+        return s.originalCommittedDone.storypoints;
     });
 
     var brickinsDone = _.map(sprints, function(s) {
-        return s.brickins.storypoints;
+        return s.brickinsDone.storypoints;
     });
 
     var commitment = _.map(sprints, function(s) {
