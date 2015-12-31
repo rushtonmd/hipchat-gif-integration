@@ -1,26 +1,65 @@
-Meteor.publish('teamsSearch', function(query) {
-	console.log("Search: " + query);
+
+Meteor.publish('teamList', function() {
 	var self = this;
 	try {
-		var response = HTTP.get('https://www.googleapis.com/books/v1/volumes', {
+
+		var sessionResult = JiraServerLogic.createSession();
+
+		if (sessionResult.statusCode !== 200) return;
+
+		var searchUrl = 'https://sungevity.atlassian.net/rest/api/2/project';
+
+		var response = Meteor.http.call("GET", searchUrl, {
 			params: {
-				q: query
-			}
+				timeout: 30000
+			},
+			headers: {
+				"cookie": sessionResult.cookie_value,
+				"content-type": "application/json",
+				"Accept": "application/json"
+			},
 		});
 
-		_.each(response.data.items, function(item) {
+		//_.each(response.data, function(item) {
+		_.each(JiraServerLogic.teamBoardIDs, function(item) {
+			//console.log(item);
 			var doc = {
-				thumb: item.volumeInfo.imageLinks.smallThumbnail,
-				title: item.volumeInfo.title,
-				link: item.volumeInfo.infoLink,
-				snippet: item.searchInfo && item.searchInfo.textSnippet
+				id: item.id,
+				name: item.name
 			};
 
 			self.added('teams', Random.id(), doc);
 
 		});
 
-		console.log("READY!");
+		console.log("TEAM LIST!");
+		self.ready();
+
+	} catch (error) {
+		console.log(error);
+	}
+});
+
+
+Meteor.publish('teamDataSearch', function(team) {
+	console.log("Team ID: " + team);
+
+	var self = this;
+	try {
+
+		var teamResults = JiraServerLogic.getTeamSprintHistory(team);
+
+		_.each(teamResults, function(sprint) {
+			console.log(sprint);
+			var doc = {
+				data: sprint
+			};
+
+			self.added('teamStatistics', Random.id(), sprint);
+
+		});
+
+		console.log("TEAM DETAILS!");
 		self.ready();
 
 	} catch (error) {

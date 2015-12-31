@@ -79,7 +79,9 @@ JiraServerLogic = {
 
 			team.id = teamID.id;
 
-			team.latestSprint = JiraServerLogic.getSprintReport(teamID.id, sessionResult);
+			var latestSprintID = JiraServerLogic.getLatestSprint(teamID.id, sessionResult);
+
+			team.latestSprint = JiraServerLogic.getSprintReport(teamID.id, latestSprintID, sessionResult);
 
 			results.totals.storiesDone += team.latestSprint.issuesDone.stories;
 			results.totals.storiesNotDone += team.latestSprint.issuesNotDone.stories;
@@ -97,9 +99,7 @@ JiraServerLogic = {
 
 	},
 
-	getSprintReport: function(teamID, sessionResult) {
-
-		//if (sessionResult.statusCode === 200) {
+	getLatestSprint: function(teamID, sessionResult){
 
 		var latestSprintUrl = "https://sungevity.atlassian.net/rest/greenhopper/latest/sprintquery/" + teamID;
 
@@ -120,8 +120,74 @@ JiraServerLogic = {
 			return sprint.state === 'CLOSED';
 		}).id;
 
+		return latestSprint;
 
-		var auth_url = "https://sungevity.atlassian.net/rest/greenhopper/1.0/rapid/charts/sprintreport?rapidViewId=" + teamID + "&sprintId=" + latestSprint;
+	},
+
+	getTeamSprintHistory: function(teamID){
+
+		console.log("Get team sprint history for: " + teamID);
+
+		var sessionResult = JiraServerLogic.createSession();
+
+		if (sessionResult.statusCode !== 200) return;
+
+		var results = [];
+
+		console.log("HERE");
+
+		var latestSprintUrl = "https://sungevity.atlassian.net/rest/greenhopper/latest/sprintquery/" + teamID;
+
+		var latestSprintUrlResult = Meteor.http.call("GET", latestSprintUrl, {
+			params: {
+				timeout: 30000
+			},
+			headers: {
+				"cookie": sessionResult.cookie_value,
+				"content-type": "application/json",
+				"Accept": "application/json"
+			},
+		});
+
+		var latestSprints = JSON.parse(latestSprintUrlResult.content).sprints.reverse();
+
+		_.each(latestSprints, function(sprint) {
+			console.log(teamID + " : " + sprint.id);
+			results.push(JiraServerLogic.getSprintReport(teamID, sprint.id, sessionResult));
+		});
+
+		return results;
+
+	},
+
+	/// need a getSprintReport(teamID, sprintNumber, sessionResult)
+	// need a getLatestSprint(teamID, sessionResult)
+
+	getSprintReport: function(teamID, latestSprintID, sessionResult) {
+
+		//if (sessionResult.statusCode === 200) {
+
+		// var latestSprintUrl = "https://sungevity.atlassian.net/rest/greenhopper/latest/sprintquery/" + teamID;
+
+		// var latestSprintUrlResult = Meteor.http.call("GET", latestSprintUrl, {
+		// 	params: {
+		// 		timeout: 30000
+		// 	},
+		// 	headers: {
+		// 		"cookie": sessionResult.cookie_value,
+		// 		"content-type": "application/json",
+		// 		"Accept": "application/json"
+		// 	},
+		// });
+
+		// var latestSprints = JSON.parse(latestSprintUrlResult.content).sprints.reverse();
+
+		// var latestSprint = _.find(latestSprints, function(sprint) {
+		// 	return sprint.state === 'CLOSED';
+		// }).id;
+
+
+		var auth_url = "https://sungevity.atlassian.net/rest/greenhopper/1.0/rapid/charts/sprintreport?rapidViewId=" + teamID + "&sprintId=" + latestSprintID;
 		var result = Meteor.http.call("GET", auth_url, {
 			params: {
 				timeout: 30000

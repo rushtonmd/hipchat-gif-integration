@@ -9,8 +9,9 @@ Tracker.autorun(function() {
     if (Session.get('query')) {
         var searchHandle = Meteor.subscribe('labelSearch', Session.get('query'));
         Session.set('searching', !searchHandle.ready());
-        builtColumn();
+        buildLabelSearchChart();
     }
+    Meteor.subscribe('teamList');
 });
 
 Template.teams.events({
@@ -31,7 +32,7 @@ Template.teams.events({
         var confidenceHigh = template.$('#chartConfidenceHigh').val();
         Session.set('confidenceLow', confidenceLow);
         Session.set('confidenceHigh', confidenceHigh);
-        builtColumn();
+        buildLabelSearchChart();
     }
 });
 
@@ -53,7 +54,7 @@ Template.teams.helpers({
     }
 });
 
-function builtColumn() {
+function buildLabelSearchChart() {
 
     var allIssues = Issues.find().fetch();
 
@@ -311,7 +312,7 @@ function builtColumn() {
  * Call the function to built the chart when the template is rendered
  */
 Template.highcharts.rendered = function() {
-    builtColumn();
+    buildLabelSearchChart();
 }
 
 
