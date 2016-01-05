@@ -57,6 +57,17 @@ function buildTeamDoneChart() {
         return s.commitment.storypoints;
     });
 
+    var planDelta = _.map(sprints, function(s) {
+        return s.issuesDone.storypoints - s.commitment.storypoints;
+    });
+
+    var averageValues = [];
+
+    for (var i = 0; i < commitment.length; i++) {
+        if (i === 0) averageValues[i] = issuesDone[i] + brickinsDone[i];
+        else averageValues[i] = Math.round(((averageValues[i-1] * i) + issuesDone[i] + brickinsDone[i]) / (i+1));
+    }
+
     console.log("building chart!");
     
     $('#teamDoneChart').highcharts({
@@ -77,6 +88,7 @@ function buildTeamDoneChart() {
             title: {
                 text: 'Story Points'
             },
+            minorTickInterval: 'auto',
             stackLabels: {
                 enabled: true,
                 style: {
@@ -119,13 +131,25 @@ function buildTeamDoneChart() {
             data: commitment
         }, {
             stack: 'combo',
-            name: 'Done (Planned)',
-            data: issuesDone
-        }, {
-            stack: 'combo',
             name: 'Done (Brickins)',
             data: brickinsDone
-        }]
+        }, {
+            stack: 'combo',
+            name: 'Done (Planned)',
+            data: issuesDone
+        },{
+            type: 'spline',
+            name: 'Average',
+            data: averageValues,
+            color: 'rgba(119, 152, 191,0.5)',
+            marker: {
+                lineWidth: 2,
+                lineColor: 'rgba(119, 152, 191,0.5)',
+                fillColor: 'white'
+            }
+        }
+        
+        ]
     });
 };
 

@@ -42,7 +42,7 @@ Meteor.publish('teamList', function() {
 
 
 Meteor.publish('teamDataSearch', function(team) {
-	console.log("Team ID: " + team);
+	//console.log("Team ID: " + team);
 
 	var self = this;
 	try {
@@ -59,7 +59,7 @@ Meteor.publish('teamDataSearch', function(team) {
 
 		});
 
-		console.log("TEAM DETAILS!");
+		//console.log("TEAM DETAILS!");
 		self.ready();
 
 	} catch (error) {
@@ -68,7 +68,7 @@ Meteor.publish('teamDataSearch', function(team) {
 });
 
 Meteor.publish('labelSearch', function(query) {
-	console.log("Search: " + query);
+	//console.log("Search: " + query);
 	var self = this;
 	try {
 
@@ -156,7 +156,7 @@ Meteor.publish('labelSearch', function(query) {
 
 		});
 
-		console.log("READY!");
+		//console.log("READY!");
 		self.ready();
 
 	} catch (error) {

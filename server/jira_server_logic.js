@@ -126,15 +126,13 @@ JiraServerLogic = {
 
 	getTeamSprintHistory: function(teamID){
 
-		console.log("Get team sprint history for: " + teamID);
+		//console.log("Get team sprint history for: " + teamID);
 
 		var sessionResult = JiraServerLogic.createSession();
 
 		if (sessionResult.statusCode !== 200) return;
 
 		var results = [];
-
-		console.log("HERE");
 
 		var latestSprintUrl = "https://sungevity.atlassian.net/rest/greenhopper/latest/sprintquery/" + teamID;
 
@@ -152,7 +150,7 @@ JiraServerLogic = {
 		var latestSprints = JSON.parse(latestSprintUrlResult.content).sprints.reverse();
 
 		_.each(latestSprints, function(sprint) {
-			console.log(teamID + " : " + sprint.id);
+			//console.log(teamID + " : " + sprint.id);
 			results.push(JiraServerLogic.getSprintReport(teamID, sprint.id, sessionResult));
 		});
 
@@ -203,7 +201,7 @@ JiraServerLogic = {
 		var sprintReportResults = sprintReportRes.contents;
 		var sprintReportDetails = sprintReportRes.sprint;
 
-		console.log(sprintReportResults.issuesNotCompletedInCurrentSprint);
+		//console.log(sprintReportResults.issuesNotCompletedInCurrentSprint);
 
 
 		/*
