@@ -68,7 +68,19 @@ function buildTeamDoneChart() {
         else averageValues[i] = Math.round(((averageValues[i-1] * i) + issuesDone[i] + brickinsDone[i]) / (i+1));
     }
 
-    console.log("building chart!");
+    var planDeltaPoints = [];
+    for (var i = 0; i < commitment.length; i++) {
+        var delta = 'NA'
+        var delta = 100 * ((issuesDone[i] + brickinsDone[i]) / (commitment[i]));
+        var fillColor = 'green';
+        if (delta < 90 || delta > 110) fillColor = 'red';
+        var label = '' + Math.round(delta) + '%';
+        planDeltaPoints[i] = {name: label, x: (i-0.35), y:(commitment[i] * 1.1), fillColor: fillColor};
+    }
+
+
+
+    //console.log("building chart!");
     
     $('#teamDoneChart').highcharts({
         chart: {
@@ -122,7 +134,21 @@ function buildTeamDoneChart() {
                         textShadow: '0 0 3px black'
                     }
                 }
-            }
+            },
+            scatter: {
+                dataLabels: {
+                    enabled: true,
+                    format: '<span style="font-size:16px">{point.name}</span>',
+                    //color: (Highcharts.theme && Highcharts.theme.dataLabelsColor) || 'black',
+                    style: {
+                        textShadow: '0 0 3px white'
+                    }
+                },
+              marker: {
+                 radius: 8,
+                 symbol: 'triangle-down'
+              }
+           }
         },
         series: [
         {
@@ -146,6 +172,18 @@ function buildTeamDoneChart() {
                 lineWidth: 2,
                 lineColor: 'rgba(119, 152, 191,0.5)',
                 fillColor: 'white'
+            }
+        },{
+            type: 'scatter',
+            //color: 'rgba(34,83,120,0.1)',
+            //color: '{point.name}',
+            name: 'Plan Delta',
+            data: planDeltaPoints, 
+            tooltip: {
+            headerFormat: '<b>Commitment Met</b>',
+            pointFormat: '<br/>{point.name}',
+            shared: true,
+            useHTML: true
             }
         }
         
