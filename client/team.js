@@ -73,7 +73,7 @@ function buildTeamDoneChart() {
         var delta = 'NA'
         var delta = 100 * ((issuesDone[i] + brickinsDone[i]) / (commitment[i]));
         var fillColor = 'green';
-        if (delta < 90 || delta > 110) fillColor = 'red';
+        if (delta < 80) fillColor = 'red';
         var label = '' + Math.round(delta) + '%';
         planDeltaPoints[i] = {name: label, x: (i-0.35), y:(commitment[i] * 1.1), fillColor: fillColor};
     }
