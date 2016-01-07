@@ -16,16 +16,16 @@ Tracker.autorun(function() {
 
 Template.teams.events({
     'submit .label-search-form': function(event, template) {
-        console.log("HERE!");
+        //console.log("HERE!");
         event.preventDefault();
         //var query = template.$('input[type=text]').val();
         var query = template.$('#labelSearchInput').val();
-        console.log("HERE: " + query);
+        //console.log("HERE: " + query);
         if (query)
             Session.set('query', query);
     },
     'submit .chart-params-form': function(event, template) {
-        console.log("HERE!");
+        //console.log("HERE!");
         event.preventDefault();
         //var query = template.$('input[type=text]').val();
         var confidenceLow = template.$('#chartConfidenceLow').val();
@@ -56,6 +56,21 @@ Template.teams.helpers({
 
 function buildLabelSearchChart() {
 
+    // Need to get all unique date groups in YYYY MMM format for created and done dates
+
+    var allUniqueDates = [];
+
+    Issues.find().forEach(function(issue){
+        var d1 = moment(issue.created).format("YYYY MMM");
+        var d2 = moment(issue.doneDate).format("YYYY MMM");
+        if (d1 !== "Invalid date") allUniqueDates.push(d1);
+        if (d2 !== "Invalid date") allUniqueDates.push(d2);
+    });
+
+    allUniqueDates = _.sortBy(_.uniq(allUniqueDates), function(d){
+        return moment(d, "YYYY MMM").format("YYYYMMDD");
+    }); 
+
     var allIssues = Issues.find().fetch();
 
     if(allIssues.length <= 0) return;
@@ -79,9 +94,11 @@ function buildLabelSearchChart() {
         };
     });
 
-    var issuesXAxis = _.map(allIssues, function(i) {
-        return i.date;
-    });
+    // var issuesXAxis = _.map(allIssues, function(i) {
+    //     return i.date;
+    // });
+
+    issuesXAxis = allUniqueDates;
 
     var openSeries = _.map(allIssues, function(i) {
         return i.totalPoints
@@ -108,6 +125,7 @@ function buildLabelSearchChart() {
         
         if (item.doneDate && item.status === "Done"){
             var doneFormat = moment(item.doneDate).format("YYYY MMM");
+
             doneSeries[issuesXAxis.indexOf(doneFormat)][1] += (item.storyPoints || 0);
         } 
     });
@@ -119,8 +137,8 @@ function buildLabelSearchChart() {
         return memo;
     }, 0);
 
-    var idealVelocity = Session.get('confidenceHigh') / 2;
-    var upperVelocity = Session.get('confidenceLow') / 2;
+    var idealVelocity = Session.get('confidenceHigh');
+    var upperVelocity = Session.get('confidenceLow');
     var idealWeeks = Math.ceil(totalOpenPoints / idealVelocity);
     var upperWeeks = Math.ceil(totalOpenPoints / upperVelocity);
 
@@ -134,7 +152,7 @@ function buildLabelSearchChart() {
     }
 
     todaySeries.push(totalOpenPoints);
-    issuesXAxis.push(moment().format("[Today:] YYYY MMM [(wk]ww)"));
+    issuesXAxis.push("Sprint Start<br/>" + moment().day(8).format("YYYY MMM DD"));
 
     for (var i = 0; i < idealWeeks; i++) {
         idealSeries.push(totalOpenPoints - (i * totalOpenPoints / idealWeeks));
@@ -143,7 +161,8 @@ function buildLabelSearchChart() {
 
     for (var i = 0; i < upperWeeks; i++) {
         upperSeries.push(totalOpenPoints - (i * totalOpenPoints / upperWeeks));
-        issuesXAxis.push(moment().add(i + 1, 'week').format("YYYY MMM [(wk]ww)"));
+        var numSprints = i+1;
+        issuesXAxis.push(moment().day(8).add(2 * numSprints, 'week').format("MMM DD") + "<br/>(sprint " + numSprints + ")");
     }
     upperSeries.push(0);
 

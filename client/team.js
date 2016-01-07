@@ -90,7 +90,7 @@ function buildTeamDoneChart() {
             enabled: false
         },
         title: {
-            text: 'Stories Done - Planned / Brickins'
+            text: 'Team Commitment Trend'
         },
         xAxis: {
             categories: categories
@@ -110,11 +110,11 @@ function buildTeamDoneChart() {
             }
         },
         legend: {
-            align: 'right',
-            x: -30,
-            verticalAlign: 'top',
-            y: 25,
-            floating: true,
+            align: 'center',
+            //x: -30,
+            verticalAlign: 'bottom',
+            //y: 25,
+            floating: false,
             backgroundColor: (Highcharts.theme && Highcharts.theme.background2) || 'white',
             borderColor: '#CCC',
             borderWidth: 1,
@@ -172,18 +172,24 @@ function buildTeamDoneChart() {
                 lineWidth: 2,
                 lineColor: 'rgba(119, 152, 191,0.5)',
                 fillColor: 'white'
+            },
+            tooltip: {
+                headerFormat: '<b>{point.x}</b><br/>',
+                pointFormat: '{series.name}: {point.y}<br/>'
             }
+
         },{
             type: 'scatter',
             //color: 'rgba(34,83,120,0.1)',
             //color: '{point.name}',
-            name: 'Plan Delta',
+            name: '80% Commitment Goal',
             data: planDeltaPoints, 
+            enableMouseTracking: false, 
             tooltip: {
-            headerFormat: '<b>Commitment Met</b>',
-            pointFormat: '<br/>{point.name}',
-            shared: true,
-            useHTML: true
+            //headerFormat: '<b>Commitment Met</b>',
+            //pointFormat: '<br/>{point.name}',
+            //shared: true,
+            //useHTML: true
             }
         }
         
