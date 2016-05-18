@@ -6,51 +6,70 @@ Session.setDefault('confidenceLow', 60);
 Session.setDefault('confidenceHigh', 80);
 
 Tracker.autorun(function() {
+
     if (Session.get('query')) {
+
         var searchHandle = Meteor.subscribe('labelSearch', Session.get('query'));
+
         Session.set('searching', !searchHandle.ready());
+
         buildLabelSearchChart();
+
     }
+
     Meteor.subscribe('teamList');
+
 });
 
 Template.teams.events({
+
     'submit .label-search-form': function(event, template) {
-        //console.log("HERE!");
+
         event.preventDefault();
-        //var query = template.$('input[type=text]').val();
+
         var query = template.$('#labelSearchInput').val();
-        //console.log("HERE: " + query);
+
         if (query)
+
             Session.set('query', query);
     },
+
     'submit .chart-params-form': function(event, template) {
-        //console.log("HERE!");
+
         event.preventDefault();
-        //var query = template.$('input[type=text]').val();
+
         var confidenceLow = template.$('#chartConfidenceLow').val();
         var confidenceHigh = template.$('#chartConfidenceHigh').val();
+
         Session.set('confidenceLow', confidenceLow);
         Session.set('confidenceHigh', confidenceHigh);
+
         buildLabelSearchChart();
+
     }
+
 });
 
 Template.teams.helpers({
+
     teams: function() {
         return Teams.find();
     },
+
     issues: function() {
         return Issues.find();
     },
+
     searching: function() {
         return Session.get('searching');
     },
-    confidenceHigh: function(){
-    	return Session.get('confidenceHigh');
+
+    confidenceHigh: function() {
+        return Session.get('confidenceHigh');
     },
-    confidenceLow: function(){
-    	return Session.get('confidenceLow');
+
+    confidenceLow: function() {
+        return Session.get('confidenceLow');
     }
 });
 
@@ -60,120 +79,147 @@ function buildLabelSearchChart() {
 
     var allUniqueDates = [];
 
-    Issues.find().forEach(function(issue){
+    Issues.find().forEach(function(issue) {
+
         var d1 = moment(issue.created).format("YYYY MMM");
         var d2 = moment(issue.doneDate).format("YYYY MMM");
+
         if (d1 !== "Invalid date") allUniqueDates.push(d1);
         if (d2 !== "Invalid date") allUniqueDates.push(d2);
+
     });
 
-    allUniqueDates = _.sortBy(_.uniq(allUniqueDates), function(d){
+    allUniqueDates = _.sortBy(_.uniq(allUniqueDates), function(d) {
+
         return moment(d, "YYYY MMM").format("YYYYMMDD");
-    }); 
+
+    });
 
     var allIssues = Issues.find().fetch();
 
-    if(allIssues.length <= 0) return;
+    if (allIssues.length <= 0) return;
 
     // Group by date
     allIssues = _.groupBy(allIssues, function(issue) {
-        //return moment(issue.created).format("YYYY MMM [(wk]ww)");
+
         return moment(issue.created).format("YYYY MMM");
-        //	return issue.customfield_10005;
+
     });
 
     allIssues = _.map(allIssues, function(item, key) {
-        var p = _.reduce(item, function(memo, i) {
-            return memo + (parseInt(i.storyPoints) || 0);
-        }, 0);
-        return {
-            date: key,
-            totalPoints: _.reduce(item, function(memo, i) {
-                return memo += (i.storyPoints || 0);
-            }, 0)
-        };
-    });
 
-    // var issuesXAxis = _.map(allIssues, function(i) {
-    //     return i.date;
-    // });
+        var p = _.reduce(item, function(memo, i) {
+
+            return memo + (parseInt(i.storyPoints) || 0);
+
+        }, 0);
+
+        return {
+
+            date: key,
+
+            totalPoints: _.reduce(item, function(memo, i) {
+
+                return memo += (i.storyPoints || 0);
+
+            }, 0)
+
+        };
+
+    });
 
     issuesXAxis = allUniqueDates;
 
     var openSeries = _.map(allIssues, function(i) {
+
         return i.totalPoints
+
     });
 
     // the data series needs to be an array of X,Y values
     var dataSeries = _.map(Issues.find().fetch(), function(item, key) {
+
         var createdFormat = moment(item.created).format("YYYY MMM");
+
         var offset = moment(item.created).format("DD") / 31 - 0.5;
+
         return [issuesXAxis.indexOf(createdFormat) + offset, item.storyPoints || 0];
+
     });
 
     var doneSeries = [];
-    //var openSeries = [];
-    for(var i = 0; i < issuesXAxis.length; i++){
-        doneSeries.push([i,0]);
-        //openSeries.push([i,0]);
-    } 
 
-    //console.log(issuesXAxis);
-    
+    for (var i = 0; i < issuesXAxis.length; i++) {
+
+        doneSeries.push([i, 0]);
+
+    }
 
     _.each(Issues.find().fetch(), function(item, key) {
-        
-        if (item.doneDate && item.status === "Done"){
+
+        if (item.doneDate && item.status === "Done") {
+
             var doneFormat = moment(item.doneDate).format("YYYY MMM");
 
             doneSeries[issuesXAxis.indexOf(doneFormat)][1] += (item.storyPoints || 0);
-        } 
+
+        }
+
     });
 
 
 
     var totalOpenPoints = _.reduce(Issues.find().fetch(), function(memo, issue) {
+
         if (issue.status !== "Done") return memo + issue.storyPoints;
+
         return memo;
+
     }, 0);
 
     var idealVelocity = Session.get('confidenceHigh');
     var upperVelocity = Session.get('confidenceLow');
+
     var idealWeeks = Math.ceil(totalOpenPoints / idealVelocity);
     var upperWeeks = Math.ceil(totalOpenPoints / upperVelocity);
 
     var idealSeries = [];
     var upperSeries = [];
     var todaySeries = [];
+
     for (var i = 0; i < issuesXAxis.length; i++) {
+
         idealSeries.push(null);
         upperSeries.push(null);
         todaySeries.push(null);
+
     }
 
     todaySeries.push(totalOpenPoints);
+
     issuesXAxis.push("Sprint Start<br/>" + moment().day(8).format("YYYY MMM DD"));
 
     for (var i = 0; i < idealWeeks; i++) {
+
         idealSeries.push(totalOpenPoints - (i * totalOpenPoints / idealWeeks));
+
     }
+
     idealSeries.push(0);
 
     for (var i = 0; i < upperWeeks; i++) {
+
         upperSeries.push(totalOpenPoints - (i * totalOpenPoints / upperWeeks));
-        var numSprints = i+1;
+
+        var numSprints = i + 1;
+
         issuesXAxis.push(moment().day(8).add(2 * numSprints, 'week').format("MMM DD") + "<br/>(sprint " + numSprints + ")");
+    
     }
+    
     upperSeries.push(0);
 
-
-
-
     $('#container-column').highcharts({
-
-        // chart: {
-        //     type: 'column'
-        // },
 
         title: {
             text: 'Label Search: ' + Session.get('query')
@@ -189,24 +235,10 @@ function buildLabelSearchChart() {
 
         xAxis: {
             categories: issuesXAxis
-            // categories: [
-            //     'Jan',
-            //     'Feb',
-            //     'Mar',
-            //     'Apr',
-            //     'May',
-            //     'Jun',
-            //     'Jul',
-            //     'Aug',
-            //     'Sep',
-            //     'Oct',
-            //     'Nov',
-            //     'Dec'
-            // ]
         },
 
         yAxis: [{ // Secondary yAxis
-        	min: 0,
+            min: 0,
             title: {
                 text: 'Total Stories',
                 style: {
@@ -255,18 +287,17 @@ function buildLabelSearchChart() {
             type: 'scatter',
             color: 'rgba(34,83,120,0.1)',
             name: 'Created Stories',
-            data: dataSeries, 
+            data: dataSeries,
             tooltip: {
-            headerFormat: '<span style="font-size:10px"></span><table>',
-            pointFormat: '<tr><td>Story Points:</td>' +
-                '<td style="padding:0"><b>{point.y:,.0f}</b></td></tr>',
-            footerFormat: '</table>',
-            shared: true,
-            useHTML: true
+                headerFormat: '<span style="font-size:10px"></span><table>',
+                pointFormat: '<tr><td>Story Points:</td>' +
+                    '<td style="padding:0"><b>{point.y:,.0f}</b></td></tr>',
+                footerFormat: '</table>',
+                shared: true,
+                useHTML: true
             }
         }, {
             type: 'column',
-            //color: 'rgba(34,83,120,0.5)',
             color: 'rgba(22, 149, 163, 0.5)',
             yAxis: 1,
             name: 'Opened Stories',
@@ -293,7 +324,7 @@ function buildLabelSearchChart() {
             yAxis: 1,
             name: 'Latest Completion',
             data: upperSeries
-        },{
+        }, {
             type: 'column',
             color: 'rgba(34,83,120,1)',
             yAxis: 1,
@@ -303,27 +334,6 @@ function buildLabelSearchChart() {
             pointPlacement: -0.2
         }]
 
-        // series: [{
-        // 	type: 'column',
-        //     name: 'Tokyo',
-        //     data: [49.9, 71.5, 106.4, 129.2, 144.0, 176.0, 135.6, 148.5, 216.4, 194.1, 95.6, 54.4]
-
-        // }, {
-        // 	type: 'column',
-        //     name: 'New York',
-        //     data: [23,78.8, 98.5, 93.4, 106.0, 84.5, 105.0, 104.3, 91.2, 83.5, 106.6, 92.3]
-
-        // }, {
-        // 	type: 'area',
-        //     name: 'London',
-        //     data: [null, null, null, 41.4, 47.0, 48.3, 59.0, 59.6, 52.4, 65.2, 59.3, 51.2]
-
-        // }, {
-        // 	type: 'spline',
-        //     name: 'Berlin',
-        //     data: [42.4, 33.2, 34.5, -39.7, 52.6, 75.5, -57.4, 60.4, 47.6, 39.1, 46.8, 51.1]
-
-        // }]
     });
 }
 
@@ -331,28 +341,37 @@ function buildLabelSearchChart() {
  * Call the function to built the chart when the template is rendered
  */
 Template.highcharts.rendered = function() {
+
     buildLabelSearchChart();
+
 }
 
 
 
 // Load the fonts
 Highcharts.createElement('link', {
+
     href: '//fonts.googleapis.com/css?family=Dosis:400,600',
+    
     rel: 'stylesheet',
+    
     type: 'text/css'
+
 }, null, document.getElementsByTagName('head')[0]);
 
 Highcharts.theme = {
+
     colors: ["#7cb5ec", "#f7a35c", "#90ee7e", "#7798BF", "#aaeeee", "#ff0066", "#eeaaee",
         "#55BF3B", "#DF5353", "#7798BF", "#aaeeee"
     ],
+
     chart: {
         backgroundColor: null,
         style: {
             fontFamily: "Dosis, sans-serif"
         }
     },
+
     title: {
         style: {
             fontSize: '16px',
@@ -360,17 +379,20 @@ Highcharts.theme = {
             textTransform: 'uppercase'
         }
     },
+
     tooltip: {
         borderWidth: 0,
         backgroundColor: 'rgba(219,219,216,0.8)',
         shadow: false
     },
+
     legend: {
         itemStyle: {
             fontWeight: 'bold',
             fontSize: '13px'
         }
     },
+
     xAxis: {
         gridLineWidth: 1,
         labels: {
@@ -379,6 +401,7 @@ Highcharts.theme = {
             }
         }
     },
+
     yAxis: {
         minorTickInterval: 'auto',
         title: {
@@ -392,14 +415,13 @@ Highcharts.theme = {
             }
         }
     },
+
     plotOptions: {
         candlestick: {
             lineColor: '#404048'
         }
     },
 
-
-    // General
     background2: '#F0F0EA'
 
 };

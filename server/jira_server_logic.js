@@ -52,8 +52,6 @@ JiraServerLogic = {
 			}
 		}
 
-		//console.log(result);
-
 		return {
 			statusCode: result.statusCode,
 			cookie_value: cookie_value
@@ -141,8 +139,6 @@ JiraServerLogic = {
 
 	getTeamSprintHistory: function(teamID){
 
-		//console.log("Get team sprint history for: " + teamID);
-
 		var sessionResult = JiraServerLogic.createSession();
 
 		if (sessionResult.statusCode !== 200) return;
@@ -165,7 +161,6 @@ JiraServerLogic = {
 		var latestSprints = JSON.parse(latestSprintUrlResult.content).sprints.reverse();
 
 		_.each(latestSprints, function(sprint) {
-			//console.log(teamID + " : " + sprint.id);
 			results.push(JiraServerLogic.getSprintReport(teamID, sprint.id, sessionResult));
 		});
 
@@ -173,31 +168,7 @@ JiraServerLogic = {
 
 	},
 
-	/// need a getSprintReport(teamID, sprintNumber, sessionResult)
-	// need a getLatestSprint(teamID, sessionResult)
-
 	getSprintReport: function(teamID, latestSprintID, sessionResult) {
-
-		//if (sessionResult.statusCode === 200) {
-
-		// var latestSprintUrl = "https://sungevity.atlassian.net/rest/greenhopper/latest/sprintquery/" + teamID;
-
-		// var latestSprintUrlResult = Meteor.http.call("GET", latestSprintUrl, {
-		// 	params: {
-		// 		timeout: 30000
-		// 	},
-		// 	headers: {
-		// 		"cookie": sessionResult.cookie_value,
-		// 		"content-type": "application/json",
-		// 		"Accept": "application/json"
-		// 	},
-		// });
-
-		// var latestSprints = JSON.parse(latestSprintUrlResult.content).sprints.reverse();
-
-		// var latestSprint = _.find(latestSprints, function(sprint) {
-		// 	return sprint.state === 'CLOSED';
-		// }).id;
 
 		if (!teamID || !latestSprintID) return {};
 
@@ -218,20 +189,6 @@ JiraServerLogic = {
 		var sprintReportResults = sprintReportRes.contents;
 		var sprintReportDetails = sprintReportRes.sprint;
 
-		//console.log(sprintReportResults.issuesNotCompletedInCurrentSprint);
-
-
-		/*
-				Return Values
-
-				Sprint Commitment
-				# of stories/points done
-				# of stories/points left in sprint
-				# of brick-ins
-				# of brick-outs
-				# of committed stories done
-				# of brick-ins done
-			*/
 
 		var sprintReportSummary = {};
 		sprintReportSummary.sprintDetails = {
@@ -310,12 +267,6 @@ JiraServerLogic = {
 
 		return sprintReportSummary;
 
-
-		//}
 	}
 
 }
-
-// var reports = JiraServerLogic.getAllSprintReports();
-
-// console.log(reports);

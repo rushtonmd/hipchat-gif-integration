@@ -7,22 +7,7 @@ Meteor.publish('teamList', function() {
 
 		if (sessionResult.statusCode !== 200) return;
 
-		// var searchUrl = 'https://sungevity.atlassian.net/rest/api/2/project';
-
-		// var response = Meteor.http.call("GET", searchUrl, {
-		// 	params: {
-		// 		timeout: 30000
-		// 	},
-		// 	headers: {
-		// 		"cookie": sessionResult.cookie_value,
-		// 		"content-type": "application/json",
-		// 		"Accept": "application/json"
-		// 	},
-		// });
-
-		//_.each(response.data, function(item) {
 		_.each(JiraServerLogic.teamBoardIDs, function(item) {
-			//console.log(item);
 			var doc = {
 				id: item.id,
 				name: item.name
@@ -32,7 +17,6 @@ Meteor.publish('teamList', function() {
 
 		});
 
-		console.log("TEAM LIST!");
 		self.ready();
 
 	} catch (error) {
@@ -42,7 +26,6 @@ Meteor.publish('teamList', function() {
 
 
 Meteor.publish('teamDataSearch', function(team) {
-	//console.log("Team ID: " + team);
 
 	var self = this;
 	try {
@@ -50,7 +33,6 @@ Meteor.publish('teamDataSearch', function(team) {
 		var teamResults = JiraServerLogic.getTeamSprintHistory(team);
 
 		_.each(teamResults, function(sprint) {
-			console.log(sprint);
 			var doc = {
 				data: sprint
 			};
@@ -59,7 +41,6 @@ Meteor.publish('teamDataSearch', function(team) {
 
 		});
 
-		//console.log("TEAM DETAILS!");
 		self.ready();
 
 	} catch (error) {
@@ -68,15 +49,12 @@ Meteor.publish('teamDataSearch', function(team) {
 });
 
 Meteor.publish('labelSearch', function(query) {
-	//console.log("Search: " + query);
+
 	var self = this;
 	try {
 
-		//var x = JiraServerLogic.getAllSprintReports();
-		//console.log(x);
-		var sessionResult = JiraServerLogic.createSession();
 
-		//console.log("Sesson Result: " + sessionResult.cookie_value);
+		var sessionResult = JiraServerLogic.createSession();
 
 		if (sessionResult.statusCode !== 200) return;
 
@@ -96,23 +74,6 @@ Meteor.publish('labelSearch', function(query) {
 
 
 		var allIssues = response.data.issues;
-		// allIssues = _.groupBy(allIssues, function(issue){
-		// 	return moment(issue.fields.created).format("YYYY MMM DD");
-		// //	return issue.customfield_10005;
-		// });
-
-
-		// _.each(allIssues, function(item, key) {
-		// 	console.log(item);
-		// 	var p =  _.reduce(item, function(memo, i){ return memo + (parseInt(i.fields.customfield_10005) || 0); }, 0);
-		// 	var doc = {
-		// 		date: key,
-		// 		totalPoints: p
-		// 	};
-
-		// 	self.added('issues', Random.id(), doc);
-
-		// });
 
 		allIssues = _.filter(allIssues, function(issue){
 			return issue.fields.issuetype.name === "Story" || issue.fields.issuetype.name === "Technical Story";
@@ -156,7 +117,6 @@ Meteor.publish('labelSearch', function(query) {
 
 		});
 
-		//console.log("READY!");
 		self.ready();
 
 	} catch (error) {

@@ -1,11 +1,15 @@
+// Team Statistics Collection
 TeamStatistics = new Mongo.Collection('teamStatistics');
 
+// Initiate session value for buildingcharts
 Session.setDefault('buildingcharts', false);
 
+// Create function for when teamhighcharts template is rendered
 Template.teamhighcharts.rendered = function() {
     buildTeamDoneChart();
 }
 
+// Helpers for Team template
 Template.team.helpers({
     teams: function() {
         return Teams.find({}, {sort:{name: 1}});
@@ -15,18 +19,20 @@ Template.team.helpers({
     }
 });
 
+// Events for Team template
 Template.team.events({
     "change select.teamList": function(evt) {
       var newValue = $(evt.target).val();
       var oldValue = Session.get("selectedTeam");
       if (newValue != oldValue) {
-        // value changed, let's do something
+        // value changed, let's do something... or not
       }
       Session.set("selectedTeam", newValue);
     }
 });
 
 
+// Autorun function for when a new team is selected
 Tracker.autorun(function() {
     if (Session.get('selectedTeam')) {
         var searchHandle = Meteor.subscribe('teamDataSearch', Session.get('selectedTeam'));
@@ -37,6 +43,7 @@ Tracker.autorun(function() {
 });
 
 
+// Build the chart
 function buildTeamDoneChart() {
 
     var sprints = TeamStatistics.find().fetch().slice(0,8).reverse();
@@ -78,9 +85,6 @@ function buildTeamDoneChart() {
         planDeltaPoints[i] = {name: label, x: (i-0.35), y:(commitment[i] * 1.1), fillColor: fillColor};
     }
 
-
-
-    //console.log("building chart!");
     
     $('#teamDoneChart').highcharts({
         chart: {
@@ -180,16 +184,10 @@ function buildTeamDoneChart() {
 
         },{
             type: 'scatter',
-            //color: 'rgba(34,83,120,0.1)',
-            //color: '{point.name}',
             name: '80% Commitment Goal',
             data: planDeltaPoints, 
             enableMouseTracking: false, 
             tooltip: {
-            //headerFormat: '<b>Commitment Met</b>',
-            //pointFormat: '<br/>{point.name}',
-            //shared: true,
-            //useHTML: true
             }
         }
         
