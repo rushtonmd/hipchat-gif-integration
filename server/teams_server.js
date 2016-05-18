@@ -7,18 +7,18 @@ Meteor.publish('teamList', function() {
 
 		if (sessionResult.statusCode !== 200) return;
 
-		var searchUrl = 'https://sungevity.atlassian.net/rest/api/2/project';
+		// var searchUrl = 'https://sungevity.atlassian.net/rest/api/2/project';
 
-		var response = Meteor.http.call("GET", searchUrl, {
-			params: {
-				timeout: 30000
-			},
-			headers: {
-				"cookie": sessionResult.cookie_value,
-				"content-type": "application/json",
-				"Accept": "application/json"
-			},
-		});
+		// var response = Meteor.http.call("GET", searchUrl, {
+		// 	params: {
+		// 		timeout: 30000
+		// 	},
+		// 	headers: {
+		// 		"cookie": sessionResult.cookie_value,
+		// 		"content-type": "application/json",
+		// 		"Accept": "application/json"
+		// 	},
+		// });
 
 		//_.each(response.data, function(item) {
 		_.each(JiraServerLogic.teamBoardIDs, function(item) {

@@ -21,7 +21,14 @@ JiraServerLogic = {
 	}, {
 		name: 'Devron',
 		id: 39
-	}],
+	}, {
+		name: 'Pricing Engine',
+		id: 61
+	}, {
+		name: 'Site Modeling',
+		id: 78
+	}
+	],
 
 	createSession: function() {
 		var auth_url = "https://sungevity.atlassian.net/rest/auth/latest/session";
@@ -71,6 +78,7 @@ JiraServerLogic = {
 		results.totals.storiesBrickinsDone = 0;
 
 
+		// Loop through all the teams in the list
 		_.each(JiraServerLogic.teamBoardIDs, function(teamID) {
 
 			var team = {};
@@ -81,17 +89,20 @@ JiraServerLogic = {
 
 			var latestSprintID = JiraServerLogic.getLatestSprint(teamID.id, sessionResult);
 
-			team.latestSprint = JiraServerLogic.getSprintReport(teamID.id, latestSprintID, sessionResult);
+			if (latestSprintID){
 
-			results.totals.storiesDone += team.latestSprint.issuesDone.stories;
-			results.totals.storiesNotDone += team.latestSprint.issuesNotDone.stories;
-			results.totals.storiesBrickouts += team.latestSprint.brickouts.stories;
-			results.totals.storiesBrickins += team.latestSprint.brickins.stories;
-			results.totals.storiesCommitment += team.latestSprint.commitment.stories;
-			results.totals.storiesCommitmentDone += team.latestSprint.originalCommittedDone.stories;
-			results.totals.storiesBrickinsDone += team.latestSprint.brickinsDone.stories;
+				team.latestSprint = JiraServerLogic.getSprintReport(teamID.id, latestSprintID, sessionResult);
 
-			results.teams.push(team);
+				results.totals.storiesDone += team.latestSprint.issuesDone.stories;
+				results.totals.storiesNotDone += team.latestSprint.issuesNotDone.stories;
+				results.totals.storiesBrickouts += team.latestSprint.brickouts.stories;
+				results.totals.storiesBrickins += team.latestSprint.brickins.stories;
+				results.totals.storiesCommitment += team.latestSprint.commitment.stories;
+				results.totals.storiesCommitmentDone += team.latestSprint.originalCommittedDone.stories;
+				results.totals.storiesBrickinsDone += team.latestSprint.brickinsDone.stories;
+
+				results.teams.push(team);
+			}
 
 		});
 
@@ -116,11 +127,15 @@ JiraServerLogic = {
 
 		var latestSprints = JSON.parse(latestSprintUrlResult.content).sprints.reverse();
 
+		if (latestSprints.length <= 0) return undefined;
+
 		var latestSprint = _.find(latestSprints, function(sprint) {
 			return sprint.state === 'CLOSED';
-		}).id;
+		});
 
-		return latestSprint;
+		latestSprint = latestSprint || {};
+
+		return latestSprint.id;
 
 	},
 
@@ -183,6 +198,8 @@ JiraServerLogic = {
 		// var latestSprint = _.find(latestSprints, function(sprint) {
 		// 	return sprint.state === 'CLOSED';
 		// }).id;
+
+		if (!teamID || !latestSprintID) return {};
 
 
 		var auth_url = "https://sungevity.atlassian.net/rest/greenhopper/1.0/rapid/charts/sprintreport?rapidViewId=" + teamID + "&sprintId=" + latestSprintID;
